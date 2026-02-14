@@ -130,27 +130,46 @@ const startEdit = (li, id) => {
   amountInput.type = "number";
   amountInput.value = exp.amount;
 
+  const categoryInput = categorySelect.cloneNode(true);
+  categoryInput.value = exp.category;
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "date";
+
+  if (exp.date) {
+    const [day, month, year] = exp.date.split("-");
+    dateInput.value = `${year}-${month}-${day}`;
+  }
+
   const btn = document.createElement("button");
   btn.textContent = "Save";
   btn.className = "save";
 
-  li.append(titleInput, amountInput, btn);
+  li.append(titleInput, amountInput, categoryInput, dateInput, btn);
 };
 
 // Save
 const saveEdit = (li, id) => {
   const titleInput = li.querySelector("input[type='text']");
   const amountInput = li.querySelector("input[type='number']");
+  const categoryInput = li.querySelector("select");
+  const dateInput = li.querySelector("input[type='date']");
 
   if (!titleInput.value.trim() || amountInput.value <= 0) {
     alert("Invalid input");
     return;
   }
 
+  if (dateInput.value) {
+    const [year, month, day] = dateInput.value.split("-");
+    exp.date = `${day} / ${month} / ${year}`;
+  }
+
   const exp = expenses.find((e) => e.id === id);
 
   exp.title = titleInput.value;
   exp.amount = Number(amountInput.value);
+  exp.category = categoryInput.value;
 
   saveExpenses(expenses);
   renderExpenses();
