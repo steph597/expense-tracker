@@ -160,12 +160,11 @@ const saveEdit = (li, id) => {
     return;
   }
 
+  let formattedDate = "";
   if (dateInput.value) {
     const [year, month, day] = dateInput.value.split("-");
-    exp.date = `${day} / ${month} / ${year}`;
+    formattedDate = `${day} / ${month} / ${year}`;
   }
-
-  const exp = expenses.find((e) => e.id === id);
 
   exp.title = titleInput.value;
   exp.amount = Number(amountInput.value);
