@@ -5,6 +5,7 @@ const sumInput = document.querySelector("#sum-input");
 const sumBtn = document.querySelector("#sum-expenses");
 const totalSum = document.querySelector("#total-sum");
 const categorySelect = document.querySelector("#category");
+const filterLists = document.querySelector(".time-filters");
 
 const getExpenses = () => {
   const data = localStorage.getItem("expenses");
@@ -27,12 +28,15 @@ let expenses = getExpenses();
 const addExp = () => {
   if (!expenseInput.value.trim() || Number(sumInput.value) <= 0) return;
 
+  const now = new Date();
+  const formattedDate = `${now.getDate()} / ${now.getMonth() + 1} / ${now.getFullYear()}`;
+
   const newExpense = {
     id: Date.now(),
     title: expenseInput.value,
     amount: Number(sumInput.value),
     category: categorySelect.value,
-    date: new Date().toLocaleDateString(),
+    date: formattedDate,
   };
 
   expenses.push(newExpense);
@@ -51,10 +55,10 @@ const addExp = () => {
   sumInput.value = "";
 };
 
-const renderExpenses = () => {
+const renderExpenses = (dataToRender = expenses) => {
   expenseList.innerHTML = "";
 
-  expenses.forEach((exp) => {
+  dataToRender.forEach((exp) => {
     const li = document.createElement("li");
     li.dataset.id = exp.id;
 
@@ -91,7 +95,7 @@ const renderExpenses = () => {
     expenseList.appendChild(li);
   });
 
-  updateTotal();
+  updateTotal(dataToRender);
 };
 
 expenseList.addEventListener("click", (e) => {
@@ -183,15 +187,63 @@ const deleteExpense = (id) => {
   renderExpenses();
 };
 
-const updateTotal = () => {
+const updateTotal = (list = expenses) => {
   let total = 0;
 
-  expenses.forEach((exp) => {
+  list.forEach((exp) => {
     total += exp.amount;
   });
 
   totalSum.textContent = total;
 };
+
+// Filter by time
+filterLists.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("time-btn")) return;
+
+  const range = e.target.dataset.range;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let filtered;
+
+  if (range === "all") {
+    filtered = expenses;
+  } else {
+    filtered = expenses.filter((exp) => {
+      const dateParts = exp.date.split("/");
+      if (dateParts.length !== 3) return false;
+
+      const day = parseInt(dateParts[0].trim());
+      const month = parseInt(dateParts[1].trim()) - 1;
+      const year = parseInt(dateParts[2].trim());
+
+      const expenseDate = new Date(year, month, day).getTime();
+
+      if (range === "day") {
+        return expenseDate >= today.getTime();
+      } else if (range === "week") {
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const diff =
+          startOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+        startOfWeek.setDate(diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+        return expenseDate >= startOfWeek.getTime();
+      } else if (range === "month") {
+        const startOfMonth = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1,
+        ).getTime();
+        return expenseDate >= startOfMonth;
+      }
+      return true;
+    });
+  }
+
+  renderExpenses(filtered);
+});
 
 addExpBtn.addEventListener("click", addExp);
 renderExpenses();
