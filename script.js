@@ -155,15 +155,16 @@ const saveEdit = (li, id) => {
   const categoryInput = li.querySelector("select");
   const dateInput = li.querySelector("input[type='date']");
 
-  if (!titleInput.value.trim() || amountInput.value <= 0) {
+  const exp = expenses.find((e) => e.id === id);
+
+  if (!exp || !titleInput.value.trim() || amountInput.value <= 0) {
     alert("Invalid input");
     return;
   }
 
-  let formattedDate = "";
   if (dateInput.value) {
     const [year, month, day] = dateInput.value.split("-");
-    formattedDate = `${day} / ${month} / ${year}`;
+    exp.date = `${day} / ${month} / ${year}`;
   }
 
   exp.title = titleInput.value;
