@@ -55,10 +55,10 @@ const addExp = () => {
   sumInput.value = "";
 };
 
-const renderExpenses = (dataToRender = expenses) => {
+const renderExpenses = (expenseToRender = expenses) => {
   expenseList.innerHTML = "";
 
-  dataToRender.forEach((exp) => {
+  expenseToRender.forEach((exp) => {
     const li = document.createElement("li");
     li.dataset.id = exp.id;
 
@@ -95,7 +95,7 @@ const renderExpenses = (dataToRender = expenses) => {
     expenseList.appendChild(li);
   });
 
-  updateTotal(dataToRender);
+  updateTotal(expenseToRender);
 };
 
 expenseList.addEventListener("click", (e) => {
