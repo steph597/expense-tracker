@@ -1,18 +1,251 @@
+/* Primary Parameters */
+:root {
+  --bg-color: #74b6d4;
+  --card-bg: #426bac;
+  --card-border: #485a74;
+  --text-main: #fff;
+  --text-muted: #cecdcd;
+  --accent-color: #014968;
+  --accent-hover: #16a8a1;
+  --success-color: #4dee88;
+  --danger-color: #ff5050;
+  --warning-color: #facc15;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--accent-color);
+  letter-spacing: 1px;
+}
+
+div {
+  width: 100%;
+  max-width: 600px;
+}
+
+body > div:first-of-type {
+  background-color: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+input,
+select {
+  background-color: #232d44;
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent-color);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.add-expense {
+  background-color: var(--accent-color);
+  color: #fafbfd;
+  font-size: 1rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.add-expense:hover {
+  background-color: var(--accent-hover);
+  color: #fafbfd;
+}
+
+/* Sort and Filter */
+.time-filters,
+.sort-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.time-btn,
+.sort-btn {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--card-border);
+  font-size: 0.85rem;
+}
+
+.time-btn:hover,
+.sort-btn:hover {
+  background-color: var(--accent-hover);
+  color: var(--text-main);
+  border-color: var(--accent-color);
+}
+
+/* Expense list */
+.expense-lists {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
 .expense-lists li {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 1rem;
+  border-radius: var(--radius);
   display: grid;
-  grid-template-columns: 1fr auto auto auto auto;
-  gap: 16px;
-  border-bottom: 1px solid #000;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "title amount" "category date" "actions actions";
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.expense-lists li::marker {
-  font-weight: bold;
+.expense-lists li .title {
+  grid-area: title;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-main);
 }
 
-.edit,
-.delete {
-  padding: 3px 8px;
-  font-size: 12px;
+.expense-lists li .amount {
+  grid-area: amount;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--success-color);
+  text-align: right;
+}
+
+.expense-lists li .category {
+  grid-area: category;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  background-color: rgb(79, 81, 194);
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  width: 4rem;
+  width: fit-content;
+}
+
+.expense-lists li .date {
+  grid-area: date;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  text-align: right;
+}
+
+/* Edit, Delete, Save btns */
+.expense-lists li .edit,
+.expense-lists li .save,
+.expense-lists li .delete {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  padding: 0.5rem 1.2rem;
+  width: fit-content;
+  display: inline-block;
+}
+
+.expense-lists li .edit {
+  background-color: #244779;
+  color: var(--text-main);
+  margin-right: 0.4rem;
+}
+
+.expense-lists li .edit:hover {
+  background-color: #64c497;
+}
+
+.expense-lists li .delete {
+  background-color: #244779;
+  color: #fff;
+}
+
+.expense-lists li .delete:hover {
+  background-color: var(--danger-color);
+  color: #fff;
+}
+
+.expense-lists li .save {
+  background-color: var(--success-color);
+  color: #010003;
+  margin-right: 0.4rem;
+}
+
+/* Total SUM */
+#sum-expenses {
+  display: none;
+}
+
+p {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#total-sum {
+  color: var(--success-color);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+/* Responsive for mobile device */
+@media (max-width: 480px) {
+  body {
+    padding: 1rem 0.5rem;
+  }
+
+  .time-filters,
+  .sort-filters {
+    justify-content: space-between;
+  }
+
+  .time-btn,
+  .sort-btn {
+    flex: 1 1 40%;
+    text-align: center;
+  }
 }
