@@ -26,6 +26,14 @@ const saveExpenses = (expenses) => {
 
 let expenses = getExpenses();
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("mk-MK", {
+    style: "currency",
+    currency: "MKD",
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
 const addExp = () => {
   if (!expenseInput.value.trim() || Number(sumInput.value) <= 0) return;
 
@@ -44,14 +52,6 @@ const addExp = () => {
   saveExpenses(expenses);
   renderExpenses();
 
-  // expenseInput.addEventListener("keydown", (e) => {
-  //   if (e.key === "Enter") addExp();
-  // });
-
-  // sumInput.addEventListener("keydown", (e) => {
-  //   if (e.key === "Enter") addExp();
-  // });
-
   expenseInput.value = "";
   sumInput.value = "";
 };
@@ -69,12 +69,7 @@ const renderExpenses = (expenseToRender = expenses) => {
 
     const amount = document.createElement("span");
     amount.className = "amount";
-    amount.textContent = new Intl.NumberFormat("de-De", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(exp.amount);
+    amount.textContent = formatCurrency(exp.amount);
 
     const category = document.createElement("span");
     category.classList = "category";
@@ -142,8 +137,13 @@ const startEdit = (li, id) => {
   dateInput.type = "date";
 
   if (exp.date) {
-    const [day, month, year] = exp.date.split("-");
-    dateInput.value = `${year}-${month}-${day}`;
+    const parts = exp.date.split("/");
+    if (parts.length === 3) {
+      const day = parts[0].trim().padStart(2, "0");
+      const month = parts[1].trim().padStart(2, "0");
+      const year = parts[2].trim();
+      dateInput.value = `${year}/${month}/${day}`;
+    }
   }
 
   const btn = document.createElement("button");
@@ -182,23 +182,13 @@ const saveEdit = (li, id) => {
 
 const deleteExpense = (id) => {
   expenses = expenses.filter((exp) => exp.id !== id);
-
   saveExpenses(expenses);
-
   renderExpenses();
 };
 
 const updateTotal = (list = expenses) => {
-  let total = 0;
-
-  list.forEach((exp) => {
-    total += exp.amount;
-  });
-
-  totalSum.textContent = new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(total);
+  const total = list.reduce((sum, exp) => sum + exp.amount, 0);
+  totalSum.textContent = formatCurrency(total);
 };
 
 // Filter by time
@@ -269,5 +259,13 @@ sortButtons.addEventListener("click", (e) => {
   renderExpenses(sorted);
 });
 
+// Add expense with Enter keypress
+const handleEnterKey = (e) => {
+  if (e.key === "Enter") addExp();
+};
+expenseInput.addEventListener("keydown", handleEnterKey);
+sumInput.addEventListener("keydown", handleEnterKey);
+
 addExpBtn.addEventListener("click", addExp);
+
 renderExpenses();
