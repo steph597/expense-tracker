@@ -11,14 +11,9 @@
     <h1>Expense Tracker</h1>
 
     <div>
-      <input
-        type="text"
-        name=""
-        id="expense-input"
-        placeholder="enter expense"
-      />
+      <input type="text" id="expense-input" placeholder="enter expense" />
 
-      <input type="number" name="" id="sum-input" placeholder="enter amount" />
+      <input type="number" id="sum-input" placeholder="enter amount" />
 
       <select id="category">
         <option value="Market">Market</option>
@@ -36,7 +31,7 @@
 
     <div>
       <div class="time-filters">
-        <button class="time-btn" data-range="all">All</button>
+        <button class="time-btn active" data-range="all">All</button>
         <button class="time-btn" data-range="day">Daily</button>
         <button class="time-btn" data-range="week">Weekly</button>
         <button class="time-btn" data-range="month">Monthly</button>
@@ -53,9 +48,34 @@
         </button>
       </div>
 
+      <div class="category-filter-container">
+        <select id="category-filter">
+          <option value="all">Сите категории</option>
+          <option value="market">Маркет</option>
+          <option value="clothes">Облека</option>
+          <option value="bills">Сметки</option>
+          <option value="pharmacy">Аптека</option>
+          <option value="transport">Транспорт</option>
+          <option value="restaurants">Ресторани</option>
+          <option value="entertainment">Забава</option>
+          <option value="other">Друго</option>
+        </select>
+      </div>
+
+      <div class="custom-date-filter">
+        <label>
+          Од:
+          <input type="date" id="date-from" />
+        </label>
+        <label>
+          До:
+          <input type="date" id="date-to" />
+        </label>
+        <button id="clear-dates-btn">Исчисти датуми</button>
+      </div>
+
       <ol class="expense-lists"></ol>
 
-      <button id="sum-expenses">Sum Expenses</button>
       <p>Total: <span id="total-sum">0</span></p>
     </div>
 

@@ -2,17 +2,21 @@ const addExpBtn = document.querySelector(".add-expense");
 const expenseList = document.querySelector(".expense-lists");
 const expenseInput = document.querySelector("#expense-input");
 const sumInput = document.querySelector("#sum-input");
-const sumBtn = document.querySelector("#sum-expenses");
 const totalSum = document.querySelector("#total-sum");
 const categorySelect = document.querySelector("#category");
-const filterLists = document.querySelector(".time-filters");
 const sortButtons = document.querySelector(".sort-filters");
+const categoryFilter = document.getElementById("category-filter");
+const timeButtons = document.querySelectorAll(".time-btn");
+const dateFromInput = document.getElementById("date-from");
+const dateToInput = document.getElementById("date-to");
+const clearDatesBtn = document.getElementById("clear-dates-btn");
+
+let activePeriod = "all";
+let activeCategory = "all";
 
 const getExpenses = () => {
   const data = localStorage.getItem("expenses");
-
   if (!data) return [];
-
   try {
     return JSON.parse(data);
   } catch {
@@ -34,6 +38,17 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+// Помошна функција за претворање на "DD / MM / YYYY" во JS Date објект
+const parseExpenseDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return new Date();
+  const day = parseInt(parts[0].trim(), 10);
+  const month = parseInt(parts[1].trim(), 10) - 1;
+  const year = parseInt(parts[2].trim(), 10);
+  return new Date(year, month, day);
+};
+
 const addExp = () => {
   if (!expenseInput.value.trim() || Number(sumInput.value) <= 0) return;
 
@@ -50,7 +65,7 @@ const addExp = () => {
 
   expenses.push(newExpense);
   saveExpenses(expenses);
-  renderExpenses();
+  applyFilters(); // Освежи го приказот со активните филтри
 
   expenseInput.value = "";
   sumInput.value = "";
@@ -72,7 +87,7 @@ const renderExpenses = (expenseToRender = expenses) => {
     amount.textContent = formatCurrency(exp.amount);
 
     const category = document.createElement("span");
-    category.classList = "category";
+    category.className = "category";
     category.textContent = exp.category;
 
     const editBtn = document.createElement("button");
@@ -91,7 +106,7 @@ const renderExpenses = (expenseToRender = expenses) => {
     expenseList.appendChild(li);
   });
 
-  updateTotal(expenseToRender);
+  updateTotalSum();
 };
 
 expenseList.addEventListener("click", (e) => {
@@ -100,17 +115,14 @@ expenseList.addEventListener("click", (e) => {
 
   const id = Number(li.dataset.id);
 
-  // Delete
   if (e.target.classList.contains("delete")) {
     deleteExpense(id);
   }
 
-  // Edit
   if (e.target.classList.contains("edit")) {
     startEdit(li, id);
   }
 
-  // Save
   if (e.target.classList.contains("save")) {
     saveEdit(li, id);
   }
@@ -142,7 +154,7 @@ const startEdit = (li, id) => {
       const day = parts[0].trim().padStart(2, "0");
       const month = parts[1].trim().padStart(2, "0");
       const year = parts[2].trim();
-      dateInput.value = `${year}/${month}/${day}`;
+      dateInput.value = `${year}-${month}-${day}`;
     }
   }
 
@@ -153,7 +165,7 @@ const startEdit = (li, id) => {
   li.append(titleInput, amountInput, categoryInput, dateInput, btn);
 };
 
-// Save
+// Save Edit
 const saveEdit = (li, id) => {
   const titleInput = li.querySelector("input[type='text']");
   const amountInput = li.querySelector("input[type='number']");
@@ -162,14 +174,14 @@ const saveEdit = (li, id) => {
 
   const exp = expenses.find((e) => e.id === id);
 
-  if (!exp || !titleInput.value.trim() || amountInput.value <= 0) {
+  if (!exp || !titleInput.value.trim() || Number(amountInput.value) <= 0) {
     alert("Invalid input");
     return;
   }
 
   if (dateInput.value) {
     const [year, month, day] = dateInput.value.split("-");
-    exp.date = `${day} / ${month} / ${year}`;
+    exp.date = `${parseInt(day, 10)} / ${parseInt(month, 10)} / ${year}`;
   }
 
   exp.title = titleInput.value;
@@ -177,89 +189,168 @@ const saveEdit = (li, id) => {
   exp.category = categoryInput.value;
 
   saveExpenses(expenses);
-  renderExpenses();
+  applyFilters();
 };
 
 const deleteExpense = (id) => {
   expenses = expenses.filter((exp) => exp.id !== id);
   saveExpenses(expenses);
-  renderExpenses();
+  applyFilters();
 };
 
-const updateTotal = (list = expenses) => {
-  const total = list.reduce((sum, exp) => sum + exp.amount, 0);
-  totalSum.textContent = formatCurrency(total);
-};
-
-// Filter by time
-filterLists.addEventListener("click", (e) => {
-  if (!e.target.classList.contains("time-btn")) return;
-
-  const range = e.target.dataset.range;
+// Apply filters function
+function applyFilters() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  let filtered;
+  const fromValue = dateFromInput ? dateFromInput.value : "";
+  const toValue = dateToInput ? dateToInput.value : "";
 
-  if (range === "all") {
-    filtered = expenses;
-  } else {
-    filtered = expenses.filter((exp) => {
-      const dateParts = exp.date.split("/");
-      if (dateParts.length !== 3) return false;
+  const filtered = expenses.filter((exp) => {
+    const matchesCategory =
+      activeCategory === "all" ||
+      exp.category.toLowerCase() === activeCategory.toLowerCase();
 
-      const day = parseInt(dateParts[0].trim());
-      const month = parseInt(dateParts[1].trim()) - 1;
-      const year = parseInt(dateParts[2].trim());
+    const expDate = parseExpenseDate(exp.date);
+    expDate.setHours(0, 0, 0, 0);
 
-      const expenseDate = new Date(year, month, day).getTime();
+    let matchesCustomDate = true;
 
-      if (range === "day") {
-        return expenseDate >= today.getTime();
-      } else if (range === "week") {
-        const startOfWeek = new Date(today);
-        const dayOfWeek = startOfWeek.getDay();
-        const diff =
-          startOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-        startOfWeek.setDate(diff);
-        startOfWeek.setHours(0, 0, 0, 0);
-        return expenseDate >= startOfWeek.getTime();
-      } else if (range === "month") {
-        const startOfMonth = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          1,
-        ).getTime();
-        return expenseDate >= startOfMonth;
+    if (fromValue || toValue) {
+      if (fromValue) {
+        const [fYear, fMonth, fDay] = fromValue.split("-");
+        const fromDate = new Date(
+          Number(fYear),
+          Number(fMonth) - 1,
+          Number(fDay),
+        );
+        fromDate.setHours(0, 0, 0, 0);
+
+        if (!toValue) {
+          if (expDate.getTime() !== fromDate.getTime()) {
+            matchesCustomDate = false;
+          }
+        } else if (expDate < fromDate) {
+          matchesCustomDate = false;
+        }
       }
-      return true;
-    });
-  }
+
+      if (toValue) {
+        const [tYear, tMonth, tDay] = toValue.split("-");
+        const toDate = new Date(
+          Number(tYear),
+          Number(tMonth) - 1,
+          Number(tDay),
+        );
+        toDate.setHours(0, 0, 0, 0);
+
+        if (!fromValue) {
+          if (expDate.getTime() !== toDate.getTime()) {
+            matchesCustomDate = false;
+          }
+        } else if (expDate > toDate) {
+          matchesCustomDate = false;
+        }
+      }
+    }
+
+    let matchesPeriod = false;
+
+    if (fromValue || toValue) {
+      matchesPeriod = true;
+    } else {
+      if (activePeriod === "all") {
+        matchesPeriod = true;
+      } else if (activePeriod === "day" || activePeriod === "daily") {
+        matchesPeriod = expDate.getTime() === today.getTime();
+      } else if (activePeriod === "week" || activePeriod === "weekly") {
+        const diffInDays = (today - expDate) / (1000 * 60 * 60 * 24);
+        matchesPeriod = diffInDays >= 0 && diffInDays <= 7;
+      } else if (activePeriod === "month" || activePeriod === "monthly") {
+        matchesPeriod =
+          expDate.getMonth() === today.getMonth() &&
+          expDate.getFullYear() === today.getFullYear();
+      }
+    }
+
+    return matchesCategory && matchesCustomDate && matchesPeriod;
+  });
 
   renderExpenses(filtered);
-});
+}
 
-sortButtons.addEventListener("click", (e) => {
-  if (!e.target.classList.contains("sort-btn")) return;
+// total sum
+function updateTotalSum() {
+  const visibleLiElements = document.querySelectorAll(".expense-lists li");
+  let filteredTotal = 0;
 
-  const sortType = e.target.dataset.sort;
+  visibleLiElements.forEach((li) => {
+    const id = Number(li.dataset.id);
+    const exp = expenses.find((e) => e.id === id);
+    if (exp) filteredTotal += exp.amount;
+  });
 
-  let sorted = [...expenses];
-
-  if (sortType === "amount-high") {
-    sorted.sort((a, b) => b.amount - a.amount);
-  } else if (sortType === "amount-low") {
-    sorted.sort((a, b) => a.amount - b.amount);
-  } else if (sortType === "date-new") {
-    sorted.sort((a, b) => b.id - a.id);
-  } else if (sortType === "date-old") {
-    sorted.sort((a, b) => a.id - b.id);
+  if (totalSum) {
+    totalSum.textContent = formatCurrency(filteredTotal);
   }
+}
 
-  renderExpenses(sorted);
+// Event Listeners за копчињата за филтрирање
+timeButtons.forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    timeButtons.forEach((b) => b.classList.remove("active"));
+    e.target.classList.add("active");
+
+    // Поддршка за data-range или data-period од HTML-от
+    activePeriod =
+      e.target.dataset.range || e.target.getAttribute("data-period") || "all";
+
+    applyFilters();
+  });
 });
 
-// Add expense with Enter keypress
+if (categoryFilter) {
+  categoryFilter.addEventListener("change", (e) => {
+    activeCategory = e.target.value.toLowerCase();
+    applyFilters();
+  });
+}
+
+// Sorting
+if (sortButtons) {
+  sortButtons.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("sort-btn")) return;
+
+    const sortType = e.target.dataset.sort;
+
+    if (sortType === "amount-high") {
+      expenses.sort((a, b) => b.amount - a.amount);
+    } else if (sortType === "amount-low") {
+      expenses.sort((a, b) => a.amount - b.amount);
+    } else if (sortType === "date-new") {
+      expenses.sort((a, b) => b.id - a.id);
+    } else if (sortType === "date-old") {
+      expenses.sort((a, b) => a.id - b.id);
+    }
+
+    applyFilters();
+  });
+}
+
+if (dateFromInput && dateToInput) {
+  dateFromInput.addEventListener("change", applyFilters);
+  dateToInput.addEventListener("change", applyFilters);
+}
+
+if (clearDatesBtn) {
+  clearDatesBtn.addEventListener("click", () => {
+    dateFromInput.value = "";
+    dateToInput.value = "";
+    applyFilters();
+  });
+}
+
+// Enter keypress
 const handleEnterKey = (e) => {
   if (e.key === "Enter") addExp();
 };
@@ -268,4 +359,5 @@ sumInput.addEventListener("keydown", handleEnterKey);
 
 addExpBtn.addEventListener("click", addExp);
 
-renderExpenses();
+// Apply filters
+applyFilters();
