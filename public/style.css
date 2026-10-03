@@ -167,11 +167,18 @@ button {
 }
 
 #clear-dates-btn {
-  padding: 0.3rem 0.6rem;
+  padding: 0.5rem 0.7rem;
   font-size: 0.8rem;
   cursor: pointer;
+  background-color: var(--danger-color);
+  color: var(--text-main);
 }
 
+#clear-dates-btn:hover {
+  cursor: pointer;
+  background-color: var(--warning-color);
+  color: var(--card-border);
+}
 /* Expense list */
 .expense-lists {
   list-style: none;
